@@ -11,7 +11,13 @@ const PORT = process.env.PORT || 3000;
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 // ─── Middleware ───────────────────────────────────────────────────
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:4200',
+    'https://youtube-dasahboard-frontend.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
