@@ -19,19 +19,23 @@ router.get('/callback', async (req, res) => {
   try {
     const { tokens } = await oauth2Client.getToken(code);
     setCredentials(tokens);
+    req.session.tokens = tokens;
 
     // Save tokens in session for persistence
     req.session.tokens = tokens;
+// Save tokens in session for persistence
 
-    res.json({
-      success: true,
-      message: '✅ YouTube authenticated successfully!',
-      tokens: {
-        access_token: tokens.access_token ? '****set****' : null,
-        refresh_token: tokens.refresh_token ? '****set****' : null,
-        expiry_date: tokens.expiry_date,
-      },
-    });
+const accessToken = tokens.access_token;
+res.redirect(`https://youtube-dasahboard-frontend.vercel.app/dashboard?token=${accessToken}`);
+    // res.json({
+    //   success: true,
+    //   message: '✅ YouTube authenticated successfully!',
+    //   tokens: {
+    //     access_token: tokens.access_token ? '****set****' : null,
+    //     refresh_token: tokens.refresh_token ? '****set****' : null,
+    //     expiry_date: tokens.expiry_date,
+    //   },
+    // });
   } catch (err) {
     console.error('OAuth error:', err);
     res.status(500).json({ success: false, message: err.message });

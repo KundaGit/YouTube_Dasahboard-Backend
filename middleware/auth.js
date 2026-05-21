@@ -1,14 +1,19 @@
 const { getCredentials, setCredentials } = require('../config/oauth');
+const { google } = require('googleapis');
+const { oauth2Client } = require('../config/oauth');
 
 const requireAuth = (req, res, next) => {
-  // Check session for stored tokens
-  if (req.session && req.session.tokens) {
-    setCredentials(req.session.tokens);
+  // Bearer token check (production - cross domain)
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    oauth2Client.setCredentials({ access_token: token });
     return next();
   }
 
-  const creds = getCredentials();
-  if (creds && creds.access_token) {
+  // Session check (localhost)
+  if (req.session && req.session.tokens) {
+    setCredentials(req.session.tokens);
     return next();
   }
 
