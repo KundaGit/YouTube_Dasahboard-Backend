@@ -6,27 +6,96 @@ const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 const CHANNEL_ID = process.env.CHANNEL_ID;
 
 // GET /videos/list
+// const listVideos = async (req, res) => {
+//   try {
+//     const { maxResults = 20, order = 'date', pageToken } = req.query;
+
+//     const response = await youtube.search.list({
+//       part: ['snippet'],
+//       channelId: CHANNEL_ID,
+//       maxResults: parseInt(maxResults),
+//       order,
+//       type: ['video'],
+//       ...(pageToken && { pageToken }),
+//     });
+
+//     const videos = response.data.items?.map(item => ({
+//       videoId: item.id.videoId,
+//       title: item.snippet.title,
+//       description: item.snippet.description,
+//       thumbnail: item.snippet.thumbnails?.high?.url,
+//       publishedAt: item.snippet.publishedAt,
+//       videoUrl: `https://youtube.com/watch?v=${item.id.videoId}`,
+//     }));
+
+//     res.json({
+//       success: true,
+//       count: videos?.length || 0,
+//       nextPageToken: response.data.nextPageToken || null,
+//       data: videos,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
 const listVideos = async (req, res) => {
   try {
-    const { maxResults = 20, order = 'date', pageToken } = req.query;
+    const { maxResults = 50, pageToken } = req.query;
 
-    const response = await youtube.search.list({
-      part: ['snippet'],
-      channelId: CHANNEL_ID,
-      maxResults: parseInt(maxResults),
-      order,
-      type: ['video'],
-      ...(pageToken && { pageToken }),
+    // Step 1: Channel uploads playlist fetch karo
+    const channelRes = await youtube.channels.list({
+      part: ['contentDetails'],
+      id: [CHANNEL_ID],
     });
 
-    const videos = response.data.items?.map(item => ({
-      videoId: item.id.videoId,
-      title: item.snippet.title,
-      description: item.snippet.description,
-      thumbnail: item.snippet.thumbnails?.high?.url,
-      publishedAt: item.snippet.publishedAt,
-      videoUrl: `https://youtube.com/watch?v=${item.id.videoId}`,
-    }));
+    const uploadsPlaylistId =
+      channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+
+    // Step 2: Uploads playlist se videos lao
+    const response = await youtube.playlistItems.list({
+      part: ['snippet'],
+      playlistId: uploadsPlaylistId,
+      maxResults: parseInt(maxResults),
+      ...(pageToken && { pageToken }),
+    });
+    const ids = response.data.items
+  .map(item => item.snippet.resourceId.videoId)
+  .join(',');
+
+const videoDetails = await youtube.videos.list({
+  part: ['contentDetails'],
+  id: ids,
+});
+
+   const videos = response.data.items
+  ?.filter(item => item.snippet?.resourceId?.videoId)
+  .map((item ,index)=> ({
+
+    videoId:
+      item.snippet.resourceId.videoId,
+
+    title:
+      item.snippet.title,
+
+    description:
+      item.snippet.description,
+
+    thumbnail:
+      item.snippet.thumbnails?.high?.url,
+
+    publishedAt:
+      item.snippet.publishedAt,
+
+    duration:
+  videoDetails.data.items[index]
+    ?.contentDetails
+    ?.duration || 'PT0S',
+
+    videoUrl:
+      `https://youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+
+  }));
 
     res.json({
       success: true,
@@ -34,8 +103,12 @@ const listVideos = async (req, res) => {
       nextPageToken: response.data.nextPageToken || null,
       data: videos,
     });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 

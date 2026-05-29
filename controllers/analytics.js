@@ -98,10 +98,10 @@ const getTopVideos = async (req, res) => {
     let titles = {};
 
     if (videoIds) {
-      const videoDetails = await youtube.videos.list({
-        part: ['snippet'],
-        id: videoIds.split(','),
-      });
+const videoDetails = await youtube.videos.list({
+  part: ['snippet', 'contentDetails'],
+  id: videoIds.split(','),
+});
       videoDetails.data.items?.forEach(v => {
         titles[v.id] = v.snippet.title;
       });

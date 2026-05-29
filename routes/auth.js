@@ -26,7 +26,8 @@ router.get('/callback', async (req, res) => {
 // Save tokens in session for persistence
 
 const accessToken = tokens.access_token;
-res.redirect(`https://youtube-dasahboard-frontend.vercel.app/dashboard?token=${accessToken}`);
+res.redirect(`http://localhost:4200/dashboard?token=${accessToken}`);
+// res.redirect(`https://youtube-dasahboard-frontend.vercel.app/dashboard?token=${accessToken}`);
     // res.json({
     //   success: true,
     //   message: '✅ YouTube authenticated successfully!',
