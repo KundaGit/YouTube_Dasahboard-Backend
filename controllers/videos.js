@@ -225,4 +225,57 @@ const updateThumbnail = async (req, res) => {
   }
 };
 
-module.exports = { listVideos, getVideoDetails, updateVideoMetadata, updateThumbnail };
+// For All video related operations on Youtube
+const getTrendingVideos = async (req, res) => {
+  try {
+
+    const response = await youtube.videos.list({
+      part: ['snippet', 'statistics'],
+      chart: 'mostPopular',
+      regionCode: 'IN',
+      maxResults: 20
+    });
+
+    res.json({
+      success: true,
+      data: response.data.items
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+
+  }
+};
+const searchYoutubeVideos = async (req, res) => {
+  try {
+
+    const { q, maxResults = 20 } = req.query;
+
+    const response = await youtube.search.list({
+      part: ['snippet'],
+      q,
+      type: ['video'],
+      maxResults: parseInt(maxResults)
+    });
+
+    res.json({
+      success: true,
+      data: response.data.items
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+
+  }
+};
+
+module.exports = { listVideos, getVideoDetails, updateVideoMetadata, updateThumbnail, getTrendingVideos,
+  searchYoutubeVideos };
