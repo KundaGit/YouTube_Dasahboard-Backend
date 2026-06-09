@@ -229,16 +229,24 @@ const updateThumbnail = async (req, res) => {
 const getTrendingVideos = async (req, res) => {
   try {
 
+    const {
+      maxResults = 20,
+      pageToken
+    } = req.query;
+
     const response = await youtube.videos.list({
       part: ['snippet', 'statistics'],
       chart: 'mostPopular',
       regionCode: 'IN',
-      maxResults: 20
+      maxResults: parseInt(maxResults),
+      ...(pageToken && { pageToken })
     });
 
     res.json({
       success: true,
-      data: response.data.items
+      data: response.data.items,
+      nextPageToken:
+        response.data.nextPageToken || null
     });
 
   } catch (err) {
